@@ -46,7 +46,7 @@ class HtcondorBackend(BaseBackend):
         job_sub = f"""
 universe              = vanilla
 executable            = /bin/bash
-arguments             = -lc {self.FILE_SH}
+arguments             = -lc {self.writer.outdir}/{self.FILE_SH}
 #transfer_executable   = NO
 should_transfer_files = NO
 request_cpus          = {self.config.cpus}
