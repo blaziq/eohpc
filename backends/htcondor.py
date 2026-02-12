@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from hpc_submit import BaseConfig, BaseBackend, ConfigError  # import from main module
+from hpc_submit import BaseConfig, BaseBackend, ConfigError, shquote  # import from main module
 
 @dataclass(frozen=True)
 class HtcondorConfig(BaseConfig):
@@ -29,54 +29,65 @@ class HtcondorConfig(BaseConfig):
 
 class HtcondorBackend(BaseBackend):
 
+    FILE_SUB = "job.sub"
+    FILE_SH = "job.sh"
+
+    MNT_PROJECT = "/project"
+    MNT_DATA = "/data"
+    MNT_OUTPUT = "/output"
+
     def _generate_sub(self) -> None:
-        pass
+        singularity_bind = ",".join([
+            f"{self.config.project}:{self.MNT_PROJECT}",
+            f"{self.config.data_dir}:{self.MNT_DATA}",
+            f"{self.config.output_dir}:{self.MNT_OUTPUT}"
+        ])
+
+        job_sub = f"""
+universe              = vanilla
+executable            = /bin/bash
+arguments             = -lc {self.FILE_SH}
+transfer_executable   = NO
+should_transfer_files = NO
+request_cpus          = {self.config.cpus}
+{ f"request_gpus          = {self.config.gpus}" if self.config.gpus else "" }
+request_memory        = {self.config.ram}
+output                = {self.writer.outdir}/$(Cluster).$(Process).out
+error                 = {self.writer.outdir}/$(Cluster).$(Process).err
+log                   = {self.writer.outdir}/$(Cluster).log
+
++SingularityJob       = True
++SingularityImage     = "{self.config.image}"
++SingulartiyBind      = "{singularity_bind}"
+
+queue
+"""
+        self.writer.write_text(self.FILE_SUB, job_sub)
+
+        
+    def _generate_sh(self):
+        exe_path = f"/project/{self.top.executable}"
+        run_cmd = f"python3 {shquote(exe_path)}" if self.config.executable.endswith(".py") else shquote(exe_path)
+
+        venv_steps = ""
+        if self.config.requirements:
+            venv = self.config.venv.strip()
+            venv_dir = venv if venv else "${_CONDOR_SCRATCH_DIR}/.venv"
+            req_file = f"{self.MNT_PROJECT}/{self.config.requirements}"
+            venv_steps = f"""
+VENV={shquote(venv_dir)}
+REQ={shquote(req_file)}
+if [ -f "$REQ_FILE" ]; then
+    python3 -m venv "$VENV"
+    source $VENV/bin/activate
+    python3 -m pip install --upgrade pip
+    python3 -m pip install --requirement $REQ
+fi
+"""
+        job_sh = f"{venv_steps}\n{run_cmd}"
+        self.writer.write_text(self.FILE_SH, job_sh)
+    
 
     def generate(self) -> None:
-        # Binds: host -> container
-        binds = [
-            f"{self.top.project_dir}:/project",
-            f"{self.top.data_dir}:/data",
-            f"{self.top.output_dir}:/output",
-        ]
-        bind_value = ",".join(binds)
-
-        # Ensure output dir exists on shared FS
-        self.top.output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Important: arguments string needs careful quoting.
-        # self.payload is already shell-quoted for bash -lc.
-        # We want arguments: -lc '<payload>'
-        # So we pass: arguments = -lc '<payload without surrounding quotes?>'
-        # Easiest: keep the single-quoted payload, but wrap the whole in double-quotes in submit file.
-        # We’ll emit:
-        #   arguments = -lc <payload>
-        # where payload already includes quotes.
-        submit = []
-        submit.append("universe = vanilla")
-        submit.append("executable = /bin/bash")
-        submit.append(f"arguments  = -lc {self.payload}")
-        submit.append("transfer_executable = False")
-        submit.append("should_transfer_files = NO")
-        submit.append("when_to_transfer_output = ON_EXIT")
-        submit.append(f"request_cpus   = {ht.cpus}")
-        submit.append(f"request_gpus   = {ht.gpus}")
-        submit.append(f"request_memory = {ht.ram}")
-        submit.append(f"output = {self.writer.outdir}/condor.$(Cluster).$(Process).out")
-        submit.append(f"error  = {self.writer.outdir}/condor.$(Cluster).$(Process).err")
-        submit.append(f"log    = {self.writer.outdir}/condor.$(Cluster).log")
-        submit.append("")
-        submit.append(f"+SingularityJob = True")
-        submit.append(f'+SingularityImage = "{self.top.image}"')
-        submit.append(f'+SingulartiyBind = "{bind_value}"')
-        #if ht.extra_args.strip():
-        #    submit.append(f'+SingularityArguments = "{ht.extra_args.strip()}"')
-
-        if ht.pool:
-            submit.append(f"pool = {ht.pool}")
-        if ht.name:
-            submit.append(f"name = {ht.name}")
-
-        submit.append("queue")
-
-        self.writer.write_text("job.sub", "\n".join(submit) + "\n")
+        self._generate_sub()
+        self._generate_sh()
