@@ -89,7 +89,7 @@ fi
 {venv_steps}
 {run_cmd}
 """
-        self.writer.write_text(self.FILE_SH, job_sh, mode=0o755)
+        self.writer.write_text(self.FILE_SH, job_sh.strip(), mode=0o755)
     
 
     def generate(self) -> None:
