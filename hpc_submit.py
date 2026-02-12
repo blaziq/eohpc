@@ -266,7 +266,6 @@ def main(argv: Optional[list[str]] = None) -> int:
         "project": project,
         "mode": mode
     })
-    print(merged)
     
     ConfigClass, BackendClass = load_backend_classes(args.mode)
     config = ConfigClass.from_merged(merged)

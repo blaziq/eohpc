@@ -66,8 +66,8 @@ queue
 
         
     def _generate_sh(self):
-        exe_path = f"/project/{self.top.executable}"
-        run_cmd = f"python3 {shquote(exe_path)}" if self.config.executable.endswith(".py") else shquote(exe_path)
+        exe_path = f"/project/{self.config.executable}"
+        run_cmd = f"python3 {exe_path}" if self.config.executable.endswith(".py") else exe_path
 
         venv_steps = ""
         if self.config.requirements:
@@ -75,8 +75,8 @@ queue
             venv_dir = venv if venv else "${_CONDOR_SCRATCH_DIR}/.venv"
             req_file = f"{self.MNT_PROJECT}/{self.config.requirements}"
             venv_steps = f"""
-VENV={shquote(venv_dir)}
-REQ={shquote(req_file)}
+VENV={venv_dir}
+REQ={req_file}
 if [ -f "$REQ_FILE" ]; then
     python3 -m venv "$VENV"
     source $VENV/bin/activate
@@ -84,7 +84,7 @@ if [ -f "$REQ_FILE" ]; then
     python3 -m pip install --requirement $REQ
 fi
 """
-        job_sh = f"{venv_steps}\n{run_cmd}"
+        job_sh = shquote(f"{venv_steps}\n{run_cmd}")
         self.writer.write_text(self.FILE_SH, job_sh)
     
 
