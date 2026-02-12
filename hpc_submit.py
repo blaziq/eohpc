@@ -98,10 +98,10 @@ class CliOverrideParser:
 @dataclass(frozen=True)
 class BaseConfig:
     project_dir: Path
+    executable: str
     data_dir: Path = ""
     output_dir: Path = ""
     image: Path = ""
-    executable: str
     requirements: str = ""
     venv: str = ""
 
