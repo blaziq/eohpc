@@ -106,6 +106,8 @@ class CliOverrideParser:
 
 @dataclass(frozen=True, kw_only=True)
 class BaseConfig:
+    project: Path
+    mode: str
     project_dir: Path
     executable: str
     data_dir: Path = ""
@@ -245,7 +247,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--set", action="append", default=[], help="Override config key via KEY=VALUE (repeatable). Dotted keys supported.")
     ap.add_argument("--outdir", default="", help="Artifacts output dir (default: <project_dir>/.hpc_submit_gen)")
     
-    args, extra = ap.parse_known_args(argv)
+    args = ap.parse_args(argv)
 
     global_cfg = Path(CONFIG_GLOBAL).expanduser()
     user_cfg = Path(CONFIG_USER).expanduser()
@@ -253,6 +255,10 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     overrides = CliOverrideParser().parse(args.set)
     merged = ConfigParser().load_merged(global_cfg, user_cfg, project_cfg, overrides)
+    merged.update({
+        "project": project,
+        "mode": args.mode
+    })
 
     project = Path(args.project).expanduser()
     outdir = Path(args.outdir).expanduser() if args.outdir else (project / ".hpc_submit_gen")

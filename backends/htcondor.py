@@ -29,6 +29,9 @@ class HtcondorConfig(BaseConfig):
 
 class HtcondorBackend(BaseBackend):
 
+    def _generate_sub(self) -> None:
+        pass
+
     def generate(self) -> None:
         # Binds: host -> container
         binds = [
