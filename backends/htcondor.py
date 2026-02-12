@@ -47,7 +47,7 @@ class HtcondorBackend(BaseBackend):
 universe              = vanilla
 executable            = /bin/bash
 arguments             = -lc {self.FILE_SH}
-transfer_executable   = NO
+#transfer_executable   = NO
 should_transfer_files = NO
 request_cpus          = {self.config.cpus}
 { f"request_gpus          = {self.config.gpus}" if self.config.gpus else "" }
@@ -84,7 +84,7 @@ if [ -f "$REQ_FILE" ]; then
     python3 -m pip install --requirement $REQ
 fi
 """
-        job_sh = shquote(f"{venv_steps}\n{run_cmd}")
+        job_sh = f"{venv_steps}\n{run_cmd}"
         self.writer.write_text(self.FILE_SH, job_sh)
     
 
