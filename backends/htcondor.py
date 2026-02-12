@@ -58,7 +58,7 @@ log                   = {self.writer.outdir}/$(Cluster).log
 
 +SingularityJob       = True
 +SingularityImage     = "{self.config.image}"
-+SingulartiyBind      = "{singularity_bind}"
++SingularityBind      = "{singularity_bind}"
 
 queue
 """
@@ -76,8 +76,8 @@ queue
             req_file = f"{self.MNT_PROJECT}/{self.config.requirements}"
             venv_steps = f"""
 VENV={venv_dir}
-REQ={req_file}
-if [ -f "$REQ_FILE" ]; then
+REQUIREMENTS={req_file}
+if [ -f "$REQUIREMENTS" ]; then
     python3 -m venv "$VENV"
     source $VENV/bin/activate
     python3 -m pip install --upgrade pip
