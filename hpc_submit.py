@@ -47,8 +47,8 @@ class ConfigParser:
         return override
 
     def load_merged(self, global_cfg: Path, user_cfg: Path, project_cfg: Optional[Path], cli_overrides: Dict[str, Any]) -> Dict[str, Any]:
-        if not global_cfg.exists():
-            raise ConfigError(f"Global config missing: {global_cfg}")
+        #if not global_cfg.exists():
+        #    raise ConfigError(f"Global config missing: {global_cfg}")
 
         merged: Dict[str, Any] = {}
         merged = self.deep_merge(merged, self.load_yaml_if_exists(global_cfg))
