@@ -95,7 +95,7 @@ class CliOverrideParser:
 # -----------------------------
 
 
-@dataclass(frozen=True)
+@dataclass
 class BaseConfig:
     project_dir: Path
     executable: str
