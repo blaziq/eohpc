@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import importlib
 import os
+import shlex
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Self, Tuple, Type, TypeVar
@@ -12,13 +14,20 @@ import yaml
 
 DEFAULT_CONFIG_NAME = f"hpc_sumbmit.conf"
 
-CONFIG_GLOBAL = f"/usr/local/etc/hpc_submit/{DEFAULT_CONFIG_NAME}"
+CONFIG_GLOBAL = Path(__file__).resolve().parent / f"{DEFAULT_CONFIG_NAME}"
 CONFIG_USER = f"~/.config/hpc_submit/{DEFAULT_CONFIG_NAME}"
 CONFIG_PROJECT = f"{DEFAULT_CONFIG_NAME}"
 
 
+
+def shquote(s: str) -> str:
+    return shlex.quote(s)
+
+
 class ConfigError(RuntimeError):
     pass
+
+
 
 
 # -----------------------------
@@ -142,6 +151,41 @@ class BaseBackend:
 
     def generate(self) -> None:
         raise NotImplementedError
+
+
+class ContainerCommandBuilder:
+    """
+    Builds a bash -lc payload to run inside container.
+    Binds expected:
+      host project_dir -> /project
+      host data_dir    -> /data
+      host output_dir  -> /output
+    """
+    def __init__(self, config: C):
+        self.cpnfig = config
+
+    def build_bash_lc_payload(self) -> str:
+        exe_path = f"/project/{self.top.executable}"
+        run_cmd = f"python3 {shquote(exe_path)}" if self.top.executable.endswith(".py") else shquote(exe_path)
+
+        venv_steps = ""
+        if self.top.requirements:
+            venv_dir = self.top.venv.strip() if self.top.venv.strip() else "/output/.venv"
+            req_file = f"/project/{self.top.requirements}"
+            venv_steps = f"""
+VENV_DIR={shquote(venv_dir)}
+REQ_FILE={shquote(req_file)}
+if [ -f "$REQ_FILE" ]; then
+  python3 -m venv "$VENV_DIR"
+  . "$VENV_DIR/bin/activate"
+  python3 -m pip install --upgrade pip
+  python3 -m pip install -r "$REQ_FILE"
+fi
+""".strip()
+
+        script = (venv_steps + "\n" + run_cmd).strip() if venv_steps else run_cmd
+        return shquote(script)
+    
 
 
 class ArtifactWriter:

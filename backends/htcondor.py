@@ -30,8 +30,6 @@ class HtcondorConfig(BaseConfig):
 class HtcondorBackend(BaseBackend):
 
     def generate(self) -> None:
-        ht = HtcondorConfig.from_merged(self.merged)
-
         # Binds: host -> container
         binds = [
             f"{self.top.project_dir}:/project",
@@ -65,11 +63,11 @@ class HtcondorBackend(BaseBackend):
         submit.append(f"error  = {self.writer.outdir}/condor.$(Cluster).$(Process).err")
         submit.append(f"log    = {self.writer.outdir}/condor.$(Cluster).log")
         submit.append("")
-        submit.append("+SingularityJob = True")
+        submit.append(f"+SingularityJob = True")
         submit.append(f'+SingularityImage = "{self.top.image}"')
-        submit.append(f'+{ht.bind_attr} = "{bind_value}"')
-        if ht.extra_args.strip():
-            submit.append(f'+SingularityArguments = "{ht.extra_args.strip()}"')
+        submit.append(f'+SingulartiyBind = "{bind_value}"')
+        #if ht.extra_args.strip():
+        #    submit.append(f'+SingularityArguments = "{ht.extra_args.strip()}"')
 
         if ht.pool:
             submit.append(f"pool = {ht.pool}")
