@@ -161,11 +161,11 @@ class ArtifactWriter:
 
 def load_backend_classes(mode: str) -> Tuple[Type, Type]:
     """
-    Imports plugins/<mode>.py and retrieves:
+    Imports backends/<mode>.py and retrieves:
       <Mode>Config and <Mode>Backend
     """
     mode = mode.strip()
-    module_name = f"plugins.{mode.lower()}"
+    module_name = f"backends.{mode.lower()}"
     module = importlib.import_module(module_name)
 
     prefix = mode.capitalize()
