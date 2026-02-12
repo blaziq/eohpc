@@ -45,8 +45,8 @@ class HtcondorBackend(BaseBackend):
 
         job_sub = f"""
 universe              = vanilla
-executable            = /bin/bash
-arguments             = -lc {self.writer.outdir}/{self.FILE_SH}
+executable            = {self.writer.outdir}/{self.FILE_SH}
+arguments             = 
 #transfer_executable   = NO
 should_transfer_files = NO
 request_cpus          = {self.config.cpus}
@@ -84,8 +84,12 @@ if [ -f "$REQUIREMENTS" ]; then
     python3 -m pip install --requirement $REQ
 fi
 """
-        job_sh = f"{venv_steps}\n{run_cmd}"
-        self.writer.write_text(self.FILE_SH, job_sh)
+        job_sh = f"""
+#!/bin/bash
+{venv_steps}
+{run_cmd}
+"""
+        self.writer.write_text(self.FILE_SH, job_sh, mode=0o755)
     
 
     def generate(self) -> None:
