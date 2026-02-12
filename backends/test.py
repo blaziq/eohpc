@@ -7,6 +7,7 @@ from hpc_submit import BaseConfig, BaseBackend, ConfigError  # import from main 
 
 @dataclass(frozen=True)
 class TestConfig(BaseConfig):
+    a: str
 
     @classmethod
     def parse(cls, merged: Dict[str, Any]) -> Dict[str, Any]:
@@ -20,4 +21,3 @@ class TestBackend(BaseBackend):
     def generate(self):
         print(self.config)
 
-    
