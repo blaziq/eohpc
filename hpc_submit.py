@@ -248,6 +248,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--outdir", default="", help="Artifacts output dir (default: <project_dir>/.hpc_submit_gen)")
     
     args = ap.parse_args(argv)
+    
+    project = Path(args.project).expanduser()
+    mode = args.mode.strip().lower()
+    outdir = Path(args.outdir).expanduser() if args.outdir else (project / ".hpc_submit_gen")
+    outdir.mkdir(parents=True, exist_ok=True)
 
     global_cfg = Path(CONFIG_GLOBAL).expanduser()
     user_cfg = Path(CONFIG_USER).expanduser()
@@ -257,12 +262,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     merged = ConfigParser().load_merged(global_cfg, user_cfg, project_cfg, overrides)
     merged.update({
         "project": project,
-        "mode": args.mode
+        "mode": mode
     })
-
-    project = Path(args.project).expanduser()
-    outdir = Path(args.outdir).expanduser() if args.outdir else (project / ".hpc_submit_gen")
-    outdir.mkdir(parents=True, exist_ok=True)
     
     ConfigClass, BackendClass = load_backend_classes(args.mode)
     config = ConfigClass.from_merged(merged)
