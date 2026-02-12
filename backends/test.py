@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from hpc_submit import BaseConfig, BaseBackend, ConfigError  # import from main module
 
-@dataclass
+@dataclass(frozen=True)
 class TestConfig(BaseConfig):
     a: str
 
