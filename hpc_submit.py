@@ -94,8 +94,6 @@ class CliOverrideParser:
 # Top-level config
 # -----------------------------
 
-C = TypeVar("C", bound=BaseConfig)
-
 
 @dataclass(frozen=True)
 class BaseConfig:
@@ -130,6 +128,9 @@ class BaseConfig:
     def from_merged(cls, merged: Dict[str, Any]) -> Self:
         base = cls.parse(merged)
         return cls(**base)
+
+
+C = TypeVar("C", bound=BaseConfig)
 
 
 class BaseBackend:
