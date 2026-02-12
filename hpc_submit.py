@@ -12,14 +12,13 @@ from typing import Any, Dict, Optional, Self, Tuple, Type, TypeVar
 
 import yaml
 
-DEFAULT_CONFIG_NAME = f"hpc_sumbmit.conf"
+DEFAULT_CONFIG_NAME = f"hpc_submit.conf"
 
 CONFIG_GLOBAL = Path(__file__).resolve().parent / f"{DEFAULT_CONFIG_NAME}"
 CONFIG_USER = f"~/.config/hpc_submit/{DEFAULT_CONFIG_NAME}"
 CONFIG_PROJECT = f"{DEFAULT_CONFIG_NAME}"
 
 
-print(CONFIG_GLOBAL)
 
 def shquote(s: str) -> str:
     return shlex.quote(s)
@@ -254,7 +253,6 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     overrides = CliOverrideParser().parse(args.set)
     merged = ConfigParser().load_merged(global_cfg, user_cfg, project_cfg, overrides)
-    print(merged)
 
     project = Path(args.project).expanduser()
     outdir = Path(args.outdir).expanduser() if args.outdir else (project / ".hpc_submit_gen")
