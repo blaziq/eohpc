@@ -133,8 +133,8 @@ class BaseConfig:
             executable = str(cls._req(merged, "executable")),
             requirements = str(merged.get("requirements") or ""),
             venv = str(merged.get("venv") or ""),
-            project = merged.get("project")
-            mode = str(merged.get("mode"))
+            project = merged.get("project"),
+            mode = str(merged.get("mode")),
         )
 
     @classmethod
