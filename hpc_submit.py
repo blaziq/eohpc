@@ -128,7 +128,9 @@ class BaseConfig:
         project = merged.get("project")
 
         inputs_str = str(merged.get("inputs")).strip()
+        print(inputs_str)
         inputs = Path(project / inputs_str).expanduser() if inputs_str else ""
+        print(inputs)
 
         return dict(
             data_dir = Path(str(merged.get("data_dir"))).expanduser(),
