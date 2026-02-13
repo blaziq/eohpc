@@ -7,4 +7,5 @@ shift || true
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 SUBMIT="$(python3 $SCRIPT_DIR/hpc_submit.py "$MODE" "$@")"
 
+echo "Running ${SUBMIT}..."
 exec ${SUBMIT}

@@ -32,11 +32,12 @@ class HtcondorBackend(BaseBackend):
 
     PREFIX = "htcondor"
 
-    def _generate_sub(self) -> None:
+    def _generate_sub(self, **kwargs) -> None:
         singularity_bind = ",".join(self._get_singularity_binds())
+        sh = Path(kwargs.get("sh")).absolute()
         job_sub = f"""
 universe              = vanilla
-executable            = {self.writer.outdir}/{self.FILE_SH}
+executable            = {sh}
 arguments             = $(args)
 #transfer_executable   = NO
 should_transfer_files = NO
@@ -70,14 +71,14 @@ queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else 
 
 RAW_LINE="$@"
 mapfile -t ARGS < <(
-  python3 - "$RAW_LINE" <<'PY'
+python3 - "$RAW_LINE" <<'PY'
 import os, sys, shlex
 line = sys.argv[1].strip()
 if line and not line.startswith("#"):
     expanded = os.path.expandvars(line)
     for arg in shlex.split(expanded):
         print(arg)
-    PY
+PY
 )
 
 mkdir -p ${{OUTPUT_DIR}}
@@ -88,11 +89,12 @@ mkdir -p ${{OUTPUT_DIR}}
         self.writer.write_text(script_file, script, mode=0o755)
   
 
-    def _generate_htcondor_submit(self, other: Dict[str, Path] = {}) -> Path:
-        venv = other.get("venv")
-        sub = other.get("sub")
+    def _generate_htcondor_submit(self, **kwargs) -> Path:
+        venv = kwargs.get("venv")
+        sub = kwargs.get("sub")
         script = f"""
 #!/bin/bash
+echo "Submitting job(s)..."
 {venv.absolute() if venv else ""}
 condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub.absolute()}
 """ 
@@ -102,11 +104,7 @@ condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub.absolute(
 
     def generate(self) -> Path:
         venv = self._generate_venv()
-        sub = self._generate_sub()
         sh = self._generate_sh()
-        submit_script = self._generate_htcondor_submit({
-            "venv": venv,
-            "sub": sub,
-            "sh": sh,
-        })
+        sub = self._generate_sub(sh=sh)
+        submit_script = self._generate_htcondor_submit(venv=venv, sub=sub)
         return submit_script

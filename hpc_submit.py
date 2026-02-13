@@ -202,6 +202,7 @@ class BaseBackend:
             requirements = Path(self.config.project / self.config.requirements).expanduser()
             script = f"""
 #!/bin/bash
+echo "Creating Python venv {self.config.venv}..."
 VENV="{venv}"
 REQUIREMENTS="{requirements}"
 if [ ! -x "$VENV/bin/python" ]; then
