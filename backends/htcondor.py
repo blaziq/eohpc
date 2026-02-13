@@ -117,6 +117,7 @@ exec 9>&-
 #!/bin/bash
 condor_submit -pool {self.config.pool} -name {self.config.schedd} {self.writer.outdir}/{self.FILE_SUB}
 """
+        self.writer.write_text(self.FILE_HTCONDOR_SUBMIT, script.strip(), mode=0o755)
 
     def generate(self) -> None:
         self._generate_sub()
