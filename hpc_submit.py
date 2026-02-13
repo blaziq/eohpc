@@ -121,25 +121,33 @@ class BaseConfig:
         if key not in d or d[key] in (None, ""):
             raise ConfigError(f"Missing required config key: {key}")
         return d[key]
-    
+
+    @classmethod
+    def _path(self, merged: Dict[str, Any], key: str, prefix: Path = None):
+        s = merged.get(key)
+        return Path(prefix / s).expanduser() if (prefix and s) else Path(s).expanduser() if s else None
+
     @classmethod
     def parse(cls, merged: Dict[str, Any]) -> Dict[str, Any]:
         # returns kwargs for cls(**kwargs) in child classes
         project = merged.get("project")
+        mode = merged.get("mode")
 
-        inputs_str = merged.get("inputs")
-        inputs = Path(project / str(inputs_str)).expanduser() if inputs_str else ""
+        data_dir = cls._path(merged, "data_dir")
+        output_dir = cls._path(merged, "output_dir")
+        image = cls._path(merged, "image")
+        inputs = cls._path(merged, "inputs", project)
 
         return dict(
-            data_dir = Path(str(merged.get("data_dir"))).expanduser(),
-            output_dir = Path(str(merged.get("output_dir"))).expanduser(),
-            image = Path(str(cls._req(merged, "image"))).expanduser(),
+            data_dir = data_dir,
+            output_dir = output_dir,
+            image = image,
             executable = str(cls._req(merged, "executable")),
             requirements = str(merged.get("requirements") or ""),
             venv = str(merged.get("venv") or ""),
             inputs = inputs,
             project = project,
-            mode = str(merged.get("mode")),
+            mode = mode
         )
 
     @classmethod

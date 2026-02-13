@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict
 
 from hpc_submit import BaseConfig, BaseBackend, ConfigError, shquote  # import from main module
@@ -39,7 +40,6 @@ class HtcondorBackend(BaseBackend):
 
     def _generate_sub(self) -> None:
 
-
         singularity_bind = ",".join([
             f"{self.config.project.absolute()}:{self.MNT_PROJECT}",
             f"{self.config.data_dir.absolute()}:{self.MNT_DATA}",
@@ -63,10 +63,10 @@ log                   = {self.writer.outdir}/$(Cluster).log
 +SingularityImage     = "{self.config.image}"
 +SingularityBind      = "{singularity_bind}"
 
-DATA_DIR              = {self.MNT_DATA}
-OUTPUT_DIR            = {self.MNT_OUTPUT}
 PROJECT_DIR           = {self.MNT_PROJECT}
-environment           = DATA_DIR=$(DATA_DIR);OUTPUT_DIR=$(OUTPUT_DIR);PROJECT_DIR=$(PROJECT_DIR)
+DATA_DIR              = {self.MNT_DATA}
+OUTPUT_DIR            = {self.MNT_OUTPUT}/$(Cluster)
+environment           = PROJECT_DIR=$(PROJECT_DIR);DATA_DIR=$(DATA_DIR);OUTPUT_DIR=$(OUTPUT_DIR)
 
 queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else ""}
 """
@@ -80,7 +80,7 @@ queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else 
         venv_steps = ""
         if self.config.requirements:
             venv = self.config.venv.strip()
-            venv_dir = venv if venv else "${_CONDOR_SCRATCH_DIR}/.venv"
+            venv_dir = Path(venv if venv else "${_CONDOR_SCRATCH_DIR}/.venv").expanduser()
             req_file = f"{self.MNT_PROJECT}/{self.config.requirements}"
             venv_steps = f"""
 VENV="{venv_dir}"
