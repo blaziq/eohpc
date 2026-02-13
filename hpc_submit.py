@@ -128,7 +128,7 @@ class BaseConfig:
         project = merged.get("project")
 
         inputs_str = str(merged.get("inputs"))
-        if inputs:
+        if inputs_str:
             inputs = Path(project / inputs_str).expanduser()
 
         return dict(
