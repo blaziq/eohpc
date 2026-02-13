@@ -114,6 +114,7 @@ class BaseConfig:
     image: Path = ""
     requirements: str = ""
     venv: str = ""
+    inputs: str = ""
 
     @classmethod
     def _req(cls, d: Dict[str, Any], key: str) -> Any:
@@ -131,6 +132,7 @@ class BaseConfig:
             executable = str(cls._req(merged, "executable")),
             requirements = str(merged.get("requirements") or ""),
             venv = str(merged.get("venv") or ""),
+            inputs = Path(str(merged.get("inputs"))).expanduser(),
             project = merged.get("project"),
             mode = str(merged.get("mode")),
         )

@@ -68,7 +68,7 @@ OUTPUT_DIR            = ${self.MNT_OUTPUT}
 PROJECT_DIR           = ${self.MNT_PROJECT}
 environment           = DATA_DIR=$(DATA_DIR);OUTPUT_DIR=$(OUTPUT_DIR);PROJECT_DIR=$(PROJECT_DIR)
 
-queue { f"from {self.config.input}" if self.config.input else ""}
+queue { f"from {self.config.inputs.absolute()}" if self.config.inputs else ""}
 """
         self.writer.write_text(self.FILE_SUB, job_sub)
 
