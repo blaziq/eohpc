@@ -127,10 +127,8 @@ class BaseConfig:
         # returns kwargs for cls(**kwargs) in child classes
         project = merged.get("project")
 
-        inputs_str = str(merged.get("inputs")).strip()
-        print(inputs_str)
-        inputs = Path(project / inputs_str).expanduser() if inputs_str else ""
-        print(inputs)
+        inputs_str = merged.get("inputs"))
+        inputs = Path(project / str(inputs_str)).expanduser() if inputs_str else ""
 
         return dict(
             data_dir = Path(str(merged.get("data_dir"))).expanduser(),
@@ -273,8 +271,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         "project": project,
         "mode": mode
     })
-    from pprint import pprint
-    pprint(merged)
+    #from pprint import pprint
+    #pprint(merged)
     
     ConfigClass, BackendClass = load_backend_classes(args.mode)
     config = ConfigClass.from_merged(merged)
