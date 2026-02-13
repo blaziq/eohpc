@@ -49,8 +49,8 @@ error                 = {self.writer.outdir}/$(Cluster).$(Process).err
 log                   = {self.writer.outdir}/$(Cluster).log
 
 +SingularityJob       = True
-+SingularityImage     = {self.config.image}
-+SingularityBind      = {singularity_bind}
++SingularityImage     = "{self.config.image}"
++SingularityBind      = "{singularity_bind}"
 
 PROJECT_DIR           = {self.MNT_PROJECT}
 DATA_DIR              = {self.MNT_DATA}
