@@ -108,7 +108,6 @@ class CliOverrideParser:
 class BaseConfig:
     project: Path
     mode: str
-    project_dir: Path
     executable: str
     data_dir: Path = ""
     output_dir: Path = ""
@@ -126,9 +125,8 @@ class BaseConfig:
     def parse(cls, merged: Dict[str, Any]) -> Dict[str, Any]:
         # returns kwargs for cls(**kwargs) in child classes
         return dict(
-            project_dir = Path(str(cls._req(merged, "project_dir"))).expanduser(),
-            data_dir = Path(str(cls._req(merged, "data_dir"))).expanduser(),
-            output_dir = Path(str(cls._req(merged, "output_dir"))).expanduser(),
+            data_dir = Path(str(merged.get("data_dir"))).expanduser(),
+            output_dir = Path(str(merged.get("output_dir"))).expanduser(),
             image = Path(str(cls._req(merged, "image"))).expanduser(),
             executable = str(cls._req(merged, "executable")),
             requirements = str(merged.get("requirements") or ""),
