@@ -86,7 +86,7 @@ mkdir -p ${{OUTPUT_DIR}}
 {cmd} "${{ARGS[@]}}"
 """
         script_file = self._filename(self.FILE_SH)
-        self.writer.write_text(script_file, script, mode=0o755)
+        return self.writer.write_text(script_file, script, mode=0o755)
   
 
     def _generate_htcondor_submit(self, **kwargs) -> Path:
@@ -105,7 +105,6 @@ condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub.absolute(
     def generate(self) -> Path:
         venv = self._generate_venv()
         sh = self._generate_sh()
-        print(venv, sh)
         sub = self._generate_sub(sh=sh)
         submit_script = self._generate_htcondor_submit(venv=venv, sub=sub)
         return submit_script
