@@ -108,17 +108,19 @@ exec 9>&-
 #!/bin/bash
 {venv_steps}
 
-RAW_LINE="$1"
+RAW_LINE="$@"
 
 mapfile -t ARGS < <(
-python3 - << PY
+  python3 - "$RAW_LINE" <<'PY'
 import os, sys, shlex
-s = os.path.expandvars(sys.argv[1])
-for a in shlex.split(s):
-    print(a)
+line = sys.argv[1]
+expanded = os.path.expandvars(line)
+for arg in shlex.split(expanded):
+    print(arg)
 PY
-"$RAW_LINE"
 )
+
+mkdir -p ${{OUTPUT_DIR}}
 
 {run_cmd} "${{ARGS[@]}}"
 """
