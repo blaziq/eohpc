@@ -105,6 +105,7 @@ condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub.absolute(
     def generate(self) -> Path:
         venv = self._generate_venv()
         sh = self._generate_sh()
+        print(venv, sh)
         sub = self._generate_sub(sh=sh)
         submit_script = self._generate_htcondor_submit(venv=venv, sub=sub)
         return submit_script
