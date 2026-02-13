@@ -63,9 +63,9 @@ log                   = {self.writer.outdir}/$(Cluster).log
 +SingularityImage     = "{self.config.image}"
 +SingularityBind      = "{singularity_bind}"
 
-DATA_DIR              = ${self.MNT_DATA}
-OUTPUT_DIR            = ${self.MNT_OUTPUT}
-PROJECT_DIR           = ${self.MNT_PROJECT}
+DATA_DIR              = {self.MNT_DATA}
+OUTPUT_DIR            = {self.MNT_OUTPUT}
+PROJECT_DIR           = {self.MNT_PROJECT}
 environment           = DATA_DIR=$(DATA_DIR);OUTPUT_DIR=$(OUTPUT_DIR);PROJECT_DIR=$(PROJECT_DIR)
 
 queue { f"from {self.config.inputs.absolute()}" if self.config.inputs else ""}

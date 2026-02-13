@@ -125,6 +125,12 @@ class BaseConfig:
     @classmethod
     def parse(cls, merged: Dict[str, Any]) -> Dict[str, Any]:
         # returns kwargs for cls(**kwargs) in child classes
+        project = merged.get("project")
+
+        inputs_str = str(merged.get("inputs"))
+        if inputs:
+            inputs = Path(project / inputs_str).expanduser()
+
         return dict(
             data_dir = Path(str(merged.get("data_dir"))).expanduser(),
             output_dir = Path(str(merged.get("output_dir"))).expanduser(),
@@ -132,8 +138,8 @@ class BaseConfig:
             executable = str(cls._req(merged, "executable")),
             requirements = str(merged.get("requirements") or ""),
             venv = str(merged.get("venv") or ""),
-            inputs = Path(str(merged.get("inputs"))).expanduser(),
-            project = merged.get("project"),
+            inputs = inputs
+            project = project
             mode = str(merged.get("mode")),
         )
 
