@@ -141,9 +141,9 @@ class BaseConfig:
         output_dir = cls._path(merged, "output_dir")
         image = cls._path(merged, "image")
         inputs = cls._path(merged, "inputs", project)
-        requirements = cls._path(merged, "inputs", project)
-        venv = cls._path(merged, "venv", project)
         executable = str(cls._req(merged, "executable"))
+        requirements = str(merged.get("requirements"))
+        venv = str(merged.get("venv"))
 
         return dict(
             data_dir = data_dir,
@@ -198,10 +198,12 @@ class BaseBackend:
     def _generate_venv(self) -> None:
         script = ""
         if self.config.requirements and self.config.venv:
+            venv = Path(self.config.project / self.config.venv).expanduser()
+            requirements = Path(self.config.project / self.config.requirements).expanduser()
             script = f"""
 #!/bin/bash
-VENV="{self.config.venv}"
-REQUIREMENTS="{self.config.requirements}"
+VENV="{venv}"
+REQUIREMENTS="{requirements}"
 if [ ! -x "$VENV/bin/python" ]; then
     python3 -m venv "$VENV"
 fi

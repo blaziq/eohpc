@@ -63,13 +63,12 @@ queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else 
 
         
     def _generate_sh(self):
-        exe_path = f"/project/{self.config.executable}"
-        run_cmd = f"python3 {exe_path}" if self.config.executable.endswith(".py") else exe_path
+        cmd = f"{"python3 " if self.config.executable.endswith(".py") else ""}{self.MNT_PROJECT}/{self.config.executable}"
+        source_venv = f"source {self.MNT_PROJECT}/{self.config.venv}" if self.config.venv else ""
         script = f"""
 #!/bin/bash
 
 RAW_LINE="$@"
-
 mapfile -t ARGS < <(
   python3 - "$RAW_LINE" <<'PY'
 import os, sys, shlex
@@ -82,8 +81,8 @@ if line and not line.startswith("#"):
 )
 
 mkdir -p ${{OUTPUT_DIR}}
-
-{run_cmd} "${{ARGS[@]}}"
+{source_venv}
+{cmd} "${{ARGS[@]}}"
 """
         script_file = self._filename(self.FILE_SH)
         self.writer.write_text(script_file, script, mode=0o755)
