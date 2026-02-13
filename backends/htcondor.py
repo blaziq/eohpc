@@ -89,12 +89,12 @@ mkdir -p ${{OUTPUT_DIR}}
   
 
     def _generate_htcondor_submit(self, other: Dict[str, Path] = {}) -> Path:
-        venv = other.get("venv") or ""
-        sub = other.get("sub") or ""
+        venv = other.get("venv")
+        sub = other.get("sub")
         script = f"""
 #!/bin/bash
-{venv}
-condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub}
+{venv.absolute() if venv else ""}
+condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub.absolute()}
 """ 
         script_file = self._filename(self.FILE_SUBMIT)
         return self.writer.write_text(script_file, script, mode=0o755)
