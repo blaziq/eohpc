@@ -68,7 +68,7 @@ OUTPUT_DIR            = {self.MNT_OUTPUT}
 PROJECT_DIR           = {self.MNT_PROJECT}
 environment           = DATA_DIR=$(DATA_DIR);OUTPUT_DIR=$(OUTPUT_DIR);PROJECT_DIR=$(PROJECT_DIR)
 
-queue { f"from {self.config.inputs.absolute()}" if self.config.inputs else ""}
+queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else ""}
 """
         self.writer.write_text(self.FILE_SUB, job_sub)
 
@@ -123,4 +123,4 @@ condor_submit -pool {self.config.pool} -name {self.config.schedd} {self.writer.o
         self._generate_sub()
         self._generate_sh()
         self._generate_htcondor_submit()
-        
+
