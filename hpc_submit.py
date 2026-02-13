@@ -125,7 +125,7 @@ class BaseConfig:
     @classmethod
     def _path(self, merged: Dict[str, Any], key: str, prefix: Path = None):
         path = None
-        s = merged.get(key).strip()
+        s = (merged.get(key) or "").strip()
         if s:
             path = Path(s).expanduser()
         if prefix and not path.is_absolute():
