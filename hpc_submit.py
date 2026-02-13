@@ -8,7 +8,7 @@ import shlex
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Self, Tuple, Type, TypeVar
+from typing import Any, Dict, List, Optional, Self, Tuple, Type, TypeVar
 
 import yaml
 
@@ -124,12 +124,16 @@ class BaseConfig:
 
     @classmethod
     def _path(self, merged: Dict[str, Any], key: str, prefix: Path = None):
-        s = merged.get(key)
-        return Path(prefix / s).expanduser() if (prefix and s) else Path(s).expanduser() if s else None
+        path = None
+        s = merged.get(key).strip()
+        if s:
+            path = Path(s).expanduser()
+        if prefix and not path.is_absolute():
+            path = Path(prefix / s).expanduser()
+        return path
 
     @classmethod
     def parse(cls, merged: Dict[str, Any]) -> Dict[str, Any]:
-        # returns kwargs for cls(**kwargs) in child classes
         project = merged.get("project")
         mode = merged.get("mode")
 
@@ -137,14 +141,17 @@ class BaseConfig:
         output_dir = cls._path(merged, "output_dir")
         image = cls._path(merged, "image")
         inputs = cls._path(merged, "inputs", project)
+        requirements = cls._path(merged, "inputs", project)
+        venv = cls._path(merged, "venv", project)
+        executable = str(cls._req(merged, "executable"))
 
         return dict(
             data_dir = data_dir,
             output_dir = output_dir,
             image = image,
-            executable = str(cls._req(merged, "executable")),
-            requirements = str(merged.get("requirements") or ""),
-            venv = str(merged.get("venv") or ""),
+            executable = executable,
+            requirements = requirements,
+            venv = venv,
             inputs = inputs,
             project = project,
             mode = mode
@@ -160,11 +167,52 @@ C = TypeVar("C", bound=BaseConfig)
 
 
 class BaseBackend:
+
+    PREFIX = ""
+
+    FILE_VENV = "venv.sh"
+    FILE_JOB = "job.sub"
+    FILE_SH = "job.sh"
+    FILE_SUBMIT = "submit.sh"
+
+    MNT_PROJECT = "/project"
+    MNT_DATA = "/data"
+    MNT_OUTPUT = "/output"
+
+
     def __init__(self, config: C, writer: ArtifactWriter):
         self.config = config
         self.writer = writer
 
-    def generate(self) -> str:
+    def _filename(self, name) -> str:
+        return f"{self.PREFIX}_{name}"
+    
+    def _get_singularity_binds(self) -> List[str]:
+        binds = [ f"{self.config.project.absolute()}:{self.MNT_PROJECT}" ]
+        if self.config.data_dir:
+            binds.append(f"{self.config.data_dir.absolute()}:{self.MNT_DATA}")
+        if self.config.output_dir:
+            binds.append(f"{self.config.output_dir.absolute()}:{self.MNT_OUTPUT}")
+        return binds
+
+    def _generate_venv(self) -> None:
+        script = ""
+        if self.config.requirements and self.config.venv:
+            script = f"""
+#!/bin/bash
+VENV="{self.config.venv}"
+REQUIREMENTS="{self.config.requirements}"
+if [ ! -x "$VENV/bin/python" ]; then
+    python3 -m venv "$VENV"
+fi
+source $VENV/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install --requirement $REQUIREMENTS
+"""
+        script_file = self._filename(self.FILE_VENV)
+        return self.writer.write_text(script_file, script, mode=0o755)
+
+    def generate(self) -> Path:
         raise NotImplementedError
 
 
@@ -175,7 +223,7 @@ class ArtifactWriter:
 
     def write_text(self, name: str, content: str, mode: int = 0o644) -> Path:
         p = self.outdir / name
-        p.write_text(content, encoding="utf-8")
+        p.write_text(content.lstrip(), encoding="utf-8")
         os.chmod(p, mode)
         return p
 
@@ -241,17 +289,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         "project": project,
         "mode": mode
     })
-    #from pprint import pprint
-    #pprint(merged)
     
     ConfigClass, BackendClass = load_backend_classes(args.mode)
     config = ConfigClass.from_merged(merged)
     writer = ArtifactWriter(outdir)
     backend = BackendClass(config, writer)
-    
-    submit_script = Path(backend.generate()).expanduser()
-
-    print(str(submit_script))
+    script = backend.generate()
+    print(script)
     return 0
 
 

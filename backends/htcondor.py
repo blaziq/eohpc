@@ -30,22 +30,10 @@ class HtcondorConfig(BaseConfig):
 
 class HtcondorBackend(BaseBackend):
 
-    FILE_SUB = "htcondor_job.sub"
-    FILE_SH = "htcondor_job.sh"
-    FILE_HTCONDOR_SUBMIT = "htcondor_submit.sh"
-
-    MNT_PROJECT = "/project"
-    MNT_DATA = "/data"
-    MNT_OUTPUT = "/output"
+    PREFIX = "htcondor"
 
     def _generate_sub(self) -> None:
-
-        singularity_bind = ",".join([
-            f"{self.config.project.absolute()}:{self.MNT_PROJECT}",
-            f"{self.config.data_dir.absolute()}:{self.MNT_DATA}",
-            f"{self.config.output_dir.absolute()}:{self.MNT_OUTPUT}"
-        ])
-
+        singularity_bind = ",".join(self._get_singularity_binds())
         job_sub = f"""
 universe              = vanilla
 executable            = {self.writer.outdir}/{self.FILE_SH}
@@ -70,72 +58,56 @@ environment           = PROJECT_DIR=$(PROJECT_DIR);DATA_DIR=$(DATA_DIR);OUTPUT_D
 
 queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else ""}
 """
-        self.writer.write_text(self.FILE_SUB, job_sub)
+        job_file = self._filename(self.FILE_JOB)
+        return self.writer.write_text(job_file, job_sub)
 
         
     def _generate_sh(self):
         exe_path = f"/project/{self.config.executable}"
         run_cmd = f"python3 {exe_path}" if self.config.executable.endswith(".py") else exe_path
-
-        venv_steps = ""
-        if self.config.requirements:
-            venv = self.config.venv.strip()
-            venv_dir = Path(venv if venv else "${_CONDOR_SCRATCH_DIR}/.venv").expanduser()
-            req_file = f"{self.MNT_PROJECT}/{self.config.requirements}"
-            venv_steps = f"""
-VENV="{venv_dir}"
-REQUIREMENTS="{req_file}"
-LOCKFILE="$VENV/.lock"
-
-mkdir -p "$VENV"
-exec 9>"$LOCKFILE"
-flock 9
-
-if [ -f "$REQUIREMENTS" ]; then
-    if [ ! -x "$VENV/bin/python" ]; then
-        python3 -m venv "$VENV"
-    fi
-    source $VENV/bin/activate
-    python3 -m pip install --upgrade pip
-    python3 -m pip install --requirement $REQUIREMENTS
-fi
-
-flock -u 9
-exec 9>&-
-"""
-
-        job_sh = f"""
+        script = f"""
 #!/bin/bash
-{venv_steps}
 
 RAW_LINE="$@"
 
 mapfile -t ARGS < <(
   python3 - "$RAW_LINE" <<'PY'
 import os, sys, shlex
-line = sys.argv[1]
-expanded = os.path.expandvars(line)
-for arg in shlex.split(expanded):
-    print(arg)
-PY
+line = sys.argv[1].strip()
+if line and not line.startswith("#"):
+    expanded = os.path.expandvars(line)
+    for arg in shlex.split(expanded):
+        print(arg)
+    PY
 )
 
 mkdir -p ${{OUTPUT_DIR}}
 
 {run_cmd} "${{ARGS[@]}}"
 """
-        self.writer.write_text(self.FILE_SH, job_sh.strip(), mode=0o755)
+        script_file = self._filename(self.FILE_SH)
+        self.writer.write_text(script_file, script, mode=0o755)
   
-    def _generate_htcondor_submit(self) -> str:
+
+    def _generate_htcondor_submit(self, other: Dict[str, Path] = {}) -> Path:
+        venv = other.get("venv") or ""
+        sub = other.get("sub") or ""
         script = f"""
 #!/bin/bash
-condor_submit -pool {self.config.pool} -name {self.config.schedd} {self.writer.outdir}/{self.FILE_SUB}
-"""
-        self.writer.write_text(self.FILE_HTCONDOR_SUBMIT, script.strip(), mode=0o755)
-        return f"{self.writer.outdir}/{self.FILE_HTCONDOR_SUBMIT}"
+{venv}
+condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub}
+""" 
+        script_file = self._filename(self.FILE_SUBMIT)
+        return self.writer.write_text(script_file, script, mode=0o755)
 
-    def generate(self) -> str:
-        self._generate_sub()
-        self._generate_sh()
-        submit_script = self._generate_htcondor_submit()
+
+    def generate(self) -> Path:
+        venv = self._generate_venv()
+        sub = self._generate_sub()
+        sh = self._generate_sh()
+        submit_script = self._generate_htcondor_submit({
+            "venv": venv,
+            "sub": sub,
+            "sh": sh,
+        })
         return submit_script
