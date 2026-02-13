@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODE="${1:-htcondor}"
+MODE="${1}"
 shift || true
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"

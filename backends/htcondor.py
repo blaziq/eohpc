@@ -110,17 +110,17 @@ exec 9>&-
 {run_cmd} "$@"
 """
         self.writer.write_text(self.FILE_SH, job_sh.strip(), mode=0o755)
-    
-
-    def _generate_htcondor_submit(self) -> None:
+  
+    def _generate_htcondor_submit(self) -> str:
         script = f"""
 #!/bin/bash
 condor_submit -pool {self.config.pool} -name {self.config.schedd} {self.writer.outdir}/{self.FILE_SUB}
 """
         self.writer.write_text(self.FILE_HTCONDOR_SUBMIT, script.strip(), mode=0o755)
+        return f"{self.writer.outdir}/{self.FILE_HTCONDOR_SUBMIT}"
 
-    def generate(self) -> None:
+    def generate(self) -> str:
         self._generate_sub()
         self._generate_sh()
-        self._generate_htcondor_submit()
-
+        submit_script = self._generate_htcondor_submit()
+        return submit_script

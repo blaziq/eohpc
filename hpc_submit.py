@@ -160,7 +160,7 @@ class BaseBackend:
 #        self.top = TopConfig.from_dict(merged)
 #        self.payload = ContainerCommandBuilder(self.top).bash_lc_payload()
 
-    def generate(self) -> None:
+    def generate(self) -> str:
         raise NotImplementedError
 
 
