@@ -108,6 +108,8 @@ exec 9>&-
 #!/bin/bash
 {venv_steps}
 
+RAW_LINE="$1"
+
 mapfile -t ARGS < <(
 python3 - << PY
 import os, sys, shlex
