@@ -128,8 +128,8 @@ class BaseConfig:
         s = (merged.get(key) or "").strip()
         if s:
             path = Path(s).expanduser()
-        if prefix and not path.is_absolute():
-            path = Path(prefix / s).expanduser()
+            if prefix and not path.is_absolute():
+                path = Path(prefix / s).expanduser()
         return path
 
     @classmethod
