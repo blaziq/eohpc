@@ -223,13 +223,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("project", help='Path to the project')
     ap.add_argument("--project-config", default="")
     ap.add_argument("--set", action="append", default=[], help="Override config key via KEY=VALUE (repeatable). Dotted keys supported.")
-    ap.add_argument("--outdir", default="", help="Artifacts output dir (default: <project_dir>/.hpc_submit_gen)")
+    ap.add_argument("--outdir", default="", help="Artifacts output dir (default: <project_dir>/.hpc_submit)")
     
     args = ap.parse_args(argv)
     
     project = Path(args.project).expanduser()
     mode = args.mode.strip().lower()
-    outdir = Path(args.outdir).expanduser() if args.outdir else (project / ".hpc_submit_gen")
+    outdir = Path(args.outdir).expanduser() if args.outdir else (project / ".hpc_submit")
 
     global_cfg = Path(CONFIG_GLOBAL).expanduser()
     user_cfg = Path(CONFIG_USER).expanduser()
