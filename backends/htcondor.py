@@ -107,7 +107,18 @@ exec 9>&-
         job_sh = f"""
 #!/bin/bash
 {venv_steps}
-{run_cmd} "$@"
+
+mapfile -t ARGS < <(
+python3 - << PY
+import os, sys, shlex
+s = os.path.expandvars(sys.argv[1])
+for a in shlex.split(s):
+    print(a)
+PY
+"$RAW_LINE"
+)
+
+{run_cmd} "${{ARGS[@]}}"
 """
         self.writer.write_text(self.FILE_SH, job_sh.strip(), mode=0o755)
   
