@@ -122,3 +122,5 @@ condor_submit -pool {self.config.pool} -name {self.config.schedd} {self.writer.o
     def generate(self) -> None:
         self._generate_sub()
         self._generate_sh()
+        self._generate_htcondor_submit()
+        
