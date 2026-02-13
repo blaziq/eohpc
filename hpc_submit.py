@@ -127,9 +127,8 @@ class BaseConfig:
         # returns kwargs for cls(**kwargs) in child classes
         project = merged.get("project")
 
-        inputs_str = str(merged.get("inputs"))
-        if inputs_str:
-            inputs = Path(project / inputs_str).expanduser()
+        inputs_str = str(merged.get("inputs")).strip()
+        inputs = Path(project / inputs_str).expanduser() if inputs_str else ""
 
         return dict(
             data_dir = Path(str(merged.get("data_dir"))).expanduser(),
