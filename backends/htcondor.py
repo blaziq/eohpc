@@ -94,8 +94,8 @@ mkdir -p ${{OUTPUT_DIR}}
         sub = kwargs.get("sub")
         script = f"""
 #!/bin/bash
-echo "Submitting job(s)..."
 {venv.absolute() if venv else ""}
+echo "Submitting job(s)..."
 condor_submit -pool {self.config.pool} -name {self.config.schedd} {sub.absolute()}
 """ 
         script_file = self._filename(self.FILE_SUBMIT)
