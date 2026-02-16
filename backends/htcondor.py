@@ -65,7 +65,7 @@ queue { f"args from {self.config.inputs.absolute()}" if self.config.inputs else 
         
     def _generate_sh(self):
         cmd = f"{"python3 " if self.config.executable.endswith(".py") else ""}{self.MNT_PROJECT}/{self.config.executable}"
-        source_venv = f"source {self.MNT_PROJECT}/{self.config.venv}" if self.config.venv else ""
+        source_venv = f"source {self.config.venv}/bin/activate" if self.config.venv else ""
         script = f"""
 #!/bin/bash
 
